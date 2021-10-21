@@ -23,13 +23,17 @@ namespace ObjImport
 
         public const string PluginName = "KK_ObjImport";
         public const string GUID = "org.njaecha.plugins.objimport";
-        public const string Version = "1.0.0";
+        public const string Version = "1.1.0";
 
         internal new static ManualLogSource Logger;
 
         private bool uiActive = false;
         private ConfigEntry<KeyboardShortcut> hotkey;
-        private Rect windowRect = new Rect(500, 40, 200, 80);
+        private Rect windowRect = new Rect(500, 40, 240, 140);
+        private int scaleSelection = 0;
+        private string[] scaleGridText = { "1", "0.5", "1.5", "2", "0.1", "0.01", "0.001", "0.0001" };
+        private float[] scales = { 1f, 0.5f, 1f, 2f, 0.1f, 0.01f, 0.001f, 0.0001f };
+
 
         public static List<ObjectCtrlInfo> remeshedObjects = new List<ObjectCtrlInfo>();
 
@@ -91,7 +95,7 @@ namespace ObjImport
                             remeshObject(i, mesh);
                             OCIItem item = (OCIItem)i;
                             Logger.LogInfo($"Mesh applied to object [{item.objectItem.name}]");
-                            i.treeNodeObject.textName = path.Substring(path.LastIndexOf("/")).Remove(0, 1);
+                            i.treeNodeObject.textName = path.Substring(path.LastIndexOf("/")).Remove(0, 4);
                         }
                     }
                     else
@@ -122,7 +126,23 @@ namespace ObjImport
             if (mesh == null)
             {
                 Logger.LogError("Mesh too big, not supported in this version of Unity.");
-                return null;
+            }
+            else if (scaleSelection != 0)
+            {
+                Vector3[] baseVertices = mesh.vertices;
+                var vertices = new Vector3[baseVertices.Length];
+                for (var i = 0; i < vertices.Length; i++)
+                {
+                    var vertex = baseVertices[i];
+                    vertex.x = (float)(vertex.x * scales[scaleSelection]);
+                    vertex.y = (float)(vertex.y * scales[scaleSelection]);
+                    vertex.z = (float)(vertex.z * scales[scaleSelection]);
+
+                    vertices[i] = vertex;
+                }
+                mesh.vertices = vertices;
+                mesh.RecalculateNormals();
+                mesh.RecalculateBounds();
             }
             return mesh;
         }
@@ -144,8 +164,9 @@ namespace ObjImport
         }
         private void WindowFunction(int WindowID)
         {
-            path = GUI.TextField(new Rect(10, 20, 180, 20), path);
-            if (GUI.Button(new Rect(10, 50 , 180, 20), "Import OBJ"))
+            path = GUI.TextField(new Rect(10, 20, 220, 20), path);
+            scaleSelection = GUI.SelectionGrid(new Rect(10, 50, 220, 40), scaleSelection, scaleGridText, 4);
+            if (GUI.Button(new Rect(10, 100, 220, 30), "Import OBJ"))
             {
                 LoadMesh();
             }

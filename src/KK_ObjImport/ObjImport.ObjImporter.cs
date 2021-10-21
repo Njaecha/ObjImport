@@ -31,42 +31,50 @@ namespace ObjImport
         // Use this for initialization
         public Mesh ImportFile(string filePath, bool is32bit)
         {
-            meshStruct newMesh = createMeshStruct(filePath);
-            populateMeshStruct(ref newMesh);
-
-            Vector3[] newVerts = new Vector3[newMesh.faceData.Length];
-            Vector2[] newUVs = new Vector2[newMesh.faceData.Length];
-            Vector3[] newNormals = new Vector3[newMesh.faceData.Length];
-            int i = 0;
-            /* The following foreach loops through the facedata and assigns the appropriate vertex, uv, or normal
-             * for the appropriate Unity mesh array.
-             */
-            foreach (Vector3 v in newMesh.faceData)
+            try
             {
-                newVerts[i] = newMesh.vertices[(int)v.x - 1];
-                if (v.y >= 1)
-                    newUVs[i] = newMesh.uv[(int)v.y - 1];
+                meshStruct newMesh = createMeshStruct(filePath);
+                populateMeshStruct(ref newMesh);
 
-                if (v.z >= 1)
-                    newNormals[i] = newMesh.normals[(int)v.z - 1];
-                i++;
+                Vector3[] newVerts = new Vector3[newMesh.faceData.Length];
+                Vector2[] newUVs = new Vector2[newMesh.faceData.Length];
+                Vector3[] newNormals = new Vector3[newMesh.faceData.Length];
+                int i = 0;
+                /* The following foreach loops through the facedata and assigns the appropriate vertex, uv, or normal
+                 * for the appropriate Unity mesh array.
+                 */
+                foreach (Vector3 v in newMesh.faceData)
+                {
+                    newVerts[i] = newMesh.vertices[(int)v.x - 1];
+                    if (v.y >= 1)
+                        newUVs[i] = newMesh.uv[(int)v.y - 1];
+
+                    if (v.z >= 1)
+                        newNormals[i] = newMesh.normals[(int)v.z - 1];
+                    i++;
+                }
+
+                Mesh mesh = new Mesh();
+
+                // not supported
+                if (is32bit)
+                    return null;
+
+                mesh.vertices = newVerts;
+                mesh.uv = newUVs;
+                mesh.normals = newNormals;
+                mesh.triangles = newMesh.triangles;
+
+                mesh.RecalculateBounds();
+                //mesh.Optimize();
+
+                return mesh;
             }
-
-            Mesh mesh = new Mesh();
-
-            // not supported
-            if (is32bit)
+            catch (Exception error)
+            {
+                ObjImport.Logger.LogError($"And error occured on importing the obj: {error}");
                 return null;
-
-            mesh.vertices = newVerts;
-            mesh.uv = newUVs;
-            mesh.normals = newNormals;
-            mesh.triangles = newMesh.triangles;
-
-            mesh.RecalculateBounds();
-            //mesh.Optimize();
-
-            return mesh;
+            }
         }
 
         private static meshStruct createMeshStruct(string filename)
@@ -100,7 +108,7 @@ namespace ObjImport
                     else
                     {
                         currentText = currentText.Trim();                           //Trim the current line
-                        brokenString = currentText.Split(splitIdentifier, 50);      //Split the line into an array, separating the original line by blank spaces
+                        brokenString = currentText.Split(splitIdentifier);      //Split the line into an array, separating the original line by blank spaces
                         switch (brokenString[0])
                         {
                             case "v":
@@ -171,7 +179,8 @@ namespace ObjImport
                     else
                     {
                         currentText = currentText.Trim();
-                        brokenString = currentText.Split(splitIdentifier, 50);
+                        brokenString = currentText.Split(splitIdentifier);
+                        //ObjImport.Logger.LogDebug($"{currentText}");
                         switch (brokenString[0])
                         {
                             case "g":
@@ -221,7 +230,8 @@ namespace ObjImport
                                         {
                                             temp.y = System.Convert.ToInt32(brokenBrokenString[1]);
                                         }
-                                        temp.z = System.Convert.ToInt32(brokenBrokenString[2]);
+                                        if (brokenBrokenString.Length > 2)                                  //Some .obj files miss the normal completly
+                                            temp.z = System.Convert.ToInt32(brokenBrokenString[2]);
                                     }
                                     j++;
 
