@@ -23,16 +23,17 @@ namespace ObjImport
 
         public const string PluginName = "KK_ObjImport";
         public const string GUID = "org.njaecha.plugins.objimport";
-        public const string Version = "1.1.0";
+        public const string Version = "1.2.0";
 
         internal new static ManualLogSource Logger;
 
         private bool uiActive = false;
         private ConfigEntry<KeyboardShortcut> hotkey;
+        private ConfigEntry<string> defaultDir;
         private Rect windowRect = new Rect(500, 40, 240, 140);
         private int scaleSelection = 0;
         private string[] scaleGridText = { "1", "0.5", "1.5", "2", "0.1", "0.01", "0.001", "0.0001" };
-        private float[] scales = { 1f, 0.5f, 1f, 2f, 0.1f, 0.01f, 0.001f, 0.0001f };
+        private float[] scales = { 1f, 0.5f, 1.5f, 2f, 0.1f, 0.01f, 0.001f, 0.0001f };
 
 
         public static List<ObjectCtrlInfo> remeshedObjects = new List<ObjectCtrlInfo>();
@@ -42,6 +43,7 @@ namespace ObjImport
             ObjImport.Logger = base.Logger;
             KeyboardShortcut defaultShortcut = new KeyboardShortcut(KeyCode.O);
             hotkey = Config.Bind("General", "Hotkey", defaultShortcut, "Press this key to open UI");
+            defaultDir = Config.Bind("General", "Default Directory", "C:", "The default directory of the file dialoge.");
             StudioSaveLoadApi.RegisterExtraBehaviour<SceneController>(GUID);
         }
 
@@ -52,6 +54,8 @@ namespace ObjImport
         }
         public void LoadMesh()
         {
+            path = path.Replace("\"", "");
+            path = path.Replace("\\", "/");
             if (!File.Exists(path))
             {
                 Logger.LogWarning($"File [{path}] does not exist");
@@ -85,17 +89,17 @@ namespace ObjImport
                     if (path.EndsWith(".obj") || path.EndsWith(".OBJ"))
                     {
                         mesh = meshFromObj(path);
-                        Logger.LogInfo($"Loaded mesh from file [{path}]");
                         //Logger.LogInfo($"Vertex count obj: {mesh.vertexCount}");
                         //Logger.LogInfo($"Triangle count obj: {mesh.triangles.Length}");
                         if (mesh == null)
                             return;
+                        Logger.LogInfo($"Loaded mesh from file [{path}]");
                         foreach (var i in selectItems)
                         {
                             remeshObject(i, mesh);
                             OCIItem item = (OCIItem)i;
                             Logger.LogInfo($"Mesh applied to object [{item.objectItem.name}]");
-                            i.treeNodeObject.textName = path.Substring(path.LastIndexOf("/")).Remove(0, 4);
+                            i.treeNodeObject.textName = path.Substring(path.LastIndexOf("/")).Remove(0, 1);
                         }
                     }
                     else
@@ -117,12 +121,13 @@ namespace ObjImport
             {
                 if (line.StartsWith("f "))
                 {
-                    vertexCount++;
+                    char[] splitIdentifier = { ' ' };
+                    string[] x = line.Split(splitIdentifier);
+                    vertexCount += (x.Length - 1);
                 }
             }
-            vertexCount = vertexCount * 3;
 
-            mesh = new ObjImporter().ImportFile(path, (vertexCount > 65000));
+            mesh = new ObjImporter().ImportFile(path, (vertexCount > 65535));
             if (mesh == null)
             {
                 Logger.LogError("Mesh too big, not supported in this version of Unity.");
@@ -141,7 +146,6 @@ namespace ObjImport
                     vertices[i] = vertex;
                 }
                 mesh.vertices = vertices;
-                mesh.RecalculateNormals();
                 mesh.RecalculateBounds();
             }
             return mesh;
@@ -164,7 +168,19 @@ namespace ObjImport
         }
         private void WindowFunction(int WindowID)
         {
-            path = GUI.TextField(new Rect(10, 20, 220, 20), path);
+            path = GUI.TextField(new Rect(10, 20, 195, 20), path);
+            if (GUI.Button(new Rect(205, 20, 25, 20), "..."))
+            {
+                KKAPI.Utilities.OpenFileDialog.OpenSaveFileDialgueFlags SingleFileFlags = 
+                    KKAPI.Utilities.OpenFileDialog.OpenSaveFileDialgueFlags.OFN_FILEMUSTEXIST | 
+                    KKAPI.Utilities.OpenFileDialog.OpenSaveFileDialgueFlags.OFN_LONGNAMES | 
+                    KKAPI.Utilities.OpenFileDialog.OpenSaveFileDialgueFlags.OFN_EXPLORER;
+                string[] file = KKAPI.Utilities.OpenFileDialog.ShowDialog("Open OBJ file", defaultDir.Value, "OBJ files (*.obj)|*.obj", "obj", SingleFileFlags);
+                if (file != null)
+                {
+                    path = file[0];
+                }
+            }
             scaleSelection = GUI.SelectionGrid(new Rect(10, 50, 220, 40), scaleSelection, scaleGridText, 4);
             if (GUI.Button(new Rect(10, 100, 220, 30), "Import OBJ"))
             {
