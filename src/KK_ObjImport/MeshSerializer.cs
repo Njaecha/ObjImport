@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 // "borrowed" from https://github.com/kaorun55/HoloLens-Samples/blob/master/Unity/WorldAnchorDemo/Assets/HoloToolkit/SpatialMapping/Scripts/SimpleMeshSerializer.cs
 // appended to serialize the first set of UV coordinates.
+// appended to serialize normals.
 
 using System.Collections.Generic;
 using SysDiag = System.Diagnostics;
@@ -88,6 +89,7 @@ namespace ObjImport
             WriteVertices(writer, mesh.vertices);
             WriteTriangleIndicies(writer, mesh.triangles);
             WriteUVs(writer, mesh.uv);
+            WriteNormals(writer, mesh.normals);
         }
 
         /// <summary>
@@ -107,14 +109,14 @@ namespace ObjImport
             Vector3[] vertices = ReadVertices(reader, vertexCount);
             int[] triangleIndices = ReadTriangleIndicies(reader, triangleIndexCount);
             Vector2[] uvs = ReadUVs(reader, vertexCount);
+            Vector3[] normals = ReadNormals(reader, vertexCount);
 
             // Create the mesh.
             Mesh mesh = new Mesh();
             mesh.vertices = vertices;
             mesh.triangles = triangleIndices;
             mesh.uv = uvs;
-            // Reconstruct the normals from the vertices and triangles.
-            mesh.RecalculateNormals();
+            mesh.normals = normals;
 
             return mesh;
         }
@@ -191,6 +193,45 @@ namespace ObjImport
         /// Writes a mesh's vertices to the data stream.
         /// </summary>
         /// <param name="reader">BinaryReader representing the data stream.</param>
+        /// <param name="normals">Array of Vector3 structures representing each normal.</param>
+        private static void WriteNormals(BinaryWriter writer, Vector3[] normals)
+        {
+            SysDiag.Debug.Assert(writer != null);
+
+            foreach (Vector3 normal in normals)
+            {
+                writer.Write(normal.x);
+                writer.Write(normal.y);
+                writer.Write(normal.z);
+            }
+        }
+
+        /// <summary>
+        /// Reads a mesh's vertices from the data stream.
+        /// </summary>
+        /// <param name="reader">BinaryReader representing the data stream.</param>
+        /// <param name="vertexCount">Count of normals to read. Should be the same as vertexCount.</param>
+        /// <returns>Array of Vector3 structures representing the mesh's normals.</returns>
+        private static Vector3[] ReadNormals(BinaryReader reader, int vertexCount)
+        {
+            SysDiag.Debug.Assert(reader != null);
+
+            Vector3[] normals = new Vector3[vertexCount];
+
+            for (int i = 0; i < normals.Length; i++)
+            {
+                normals[i] = new Vector3(reader.ReadSingle(),
+                                        reader.ReadSingle(),
+                                        reader.ReadSingle());
+            }
+
+            return normals;
+        }
+
+        /// <summary>
+        /// Writes a mesh's uvs to the data stream.
+        /// </summary>
+        /// <param name="reader">BinaryReader representing the data stream.</param>
         /// <param name="uvs">Array of Vector2 structures representing each uv coordinate.</param>
         private static void WriteUVs(BinaryWriter writer, Vector2[] uvs)
         {
@@ -204,10 +245,10 @@ namespace ObjImport
         }
 
         /// <summary>
-        /// Reads a mesh's vertices from the data stream.
+        /// Reads a mesh's uvs from the data stream.
         /// </summary>
         /// <param name="reader">BinaryReader representing the data stream.</param>
-        /// <param name="uvCount">ount of uvs to read. Should be the same as vertexCount.</param>
+        /// <param name="uvCount">Count of uvs to read. Should be the same as vertexCount.</param>
         /// <returns>Array of Vector2 structures representing the mesh's uvs.</returns>
         private static Vector2[] ReadUVs(BinaryReader reader, int uvCount)
         {

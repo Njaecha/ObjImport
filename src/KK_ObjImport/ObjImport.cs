@@ -23,7 +23,7 @@ namespace ObjImport
 
         public const string PluginName = "KK_ObjImport";
         public const string GUID = "org.njaecha.plugins.objimport";
-        public const string Version = "1.2.0";
+        public const string Version = "1.2.1";
 
         internal new static ManualLogSource Logger;
 
@@ -34,6 +34,7 @@ namespace ObjImport
         private int scaleSelection = 0;
         private string[] scaleGridText = { "1", "0.5", "1.5", "2", "0.1", "0.01", "0.001", "0.0001" };
         private float[] scales = { 1f, 0.5f, 1.5f, 2f, 0.1f, 0.01f, 0.001f, 0.0001f };
+        private bool displayHelp = false;
 
 
         public static List<ObjectCtrlInfo> remeshedObjects = new List<ObjectCtrlInfo>();
@@ -162,7 +163,7 @@ namespace ObjImport
         {
             if (uiActive)
             {
-                windowRect = GUI.Window(345, windowRect, WindowFunction, "Obj Import");
+                windowRect = GUI.Window(345, windowRect, WindowFunction, "Obj Import v" + Version);
                 KKAPI.Utilities.IMGUIUtils.EatInputInRect(windowRect);
             }
         }
@@ -182,10 +183,21 @@ namespace ObjImport
                 }
             }
             scaleSelection = GUI.SelectionGrid(new Rect(10, 50, 220, 40), scaleSelection, scaleGridText, 4);
-            if (GUI.Button(new Rect(10, 100, 220, 30), "Import OBJ"))
+            if (GUI.Button(new Rect(10, 100, 180, 30), "Import OBJ"))
             {
                 LoadMesh();
             }
+            if (GUI.Button(new Rect(190, 100, 40, 30), "Help"))
+            {
+                displayHelp = !displayHelp;
+            }
+            if (displayHelp)
+            {
+                windowRect.height = 270;
+                string helpText = "1. Select a studio item you want to replace.\n2. Enter an .obj file via it's filepath or the open-file-dialogue [...].\n3. Select the import-scaling-modifier in the selectiongrid above.\n4. Press 'Import'. If nothing happens, check the console for errors.";
+                GUI.Label(new Rect(10, 135, 220, 130), helpText);
+            }
+            else windowRect.height = 140;
             GUI.DragWindow();
         }
     }
