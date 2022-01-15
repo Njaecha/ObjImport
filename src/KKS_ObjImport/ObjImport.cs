@@ -16,14 +16,13 @@ namespace ObjImport
     [BepInPlugin(GUID, PluginName, Version)]
     [BepInDependency(KoikatuAPI.GUID, KoikatuAPI.VersionConst)]
     [BepInDependency(ExtensibleSaveFormat.ExtendedSave.GUID, ExtensibleSaveFormat.ExtendedSave.Version)]
-    [BepInProcess("CharaStudio")]
     public class ObjImport : BaseUnityPlugin
     {
         public string path = "";
 
         public const string PluginName = "KKS_ObjImport";
         public const string GUID = "org.njaecha.plugins.objimport";
-        public const string Version = "1.2.2";
+        public const string Version = "1.3.0";
 
         internal new static ManualLogSource Logger;
 
@@ -70,7 +69,6 @@ namespace ObjImport
             {
                 IEnumerable<ObjectCtrlInfo> selectedObjects = KKAPI.Studio.StudioAPI.GetSelectedObjects();
                 Mesh mesh = new Mesh();
-                Boolean runImport = false;
                 List<ObjectCtrlInfo> selectItems = new List<ObjectCtrlInfo>();
 
                 foreach (ObjectCtrlInfo oci in selectedObjects)
@@ -79,26 +77,23 @@ namespace ObjImport
                     {
                         OCIItem item = (OCIItem)oci;
                         if (item.objectItem.GetComponentInChildren<MeshFilter>())
-                        {                            
-                            runImport = true;
+                        {
                             selectItems.Add(oci);
                         }
                         else Logger.LogWarning($"No MeshFilter found on selected Item [{item.objectItem.name}]");
                     }
-                    else Logger.LogWarning("Selected object is not an Item");
-
                 }
 
-                if (runImport)
+                if (path.EndsWith(".obj") || path.EndsWith(".OBJ"))
                 {
-                    if (path.EndsWith(".obj") || path.EndsWith(".OBJ"))
-                    {
-                        mesh = meshFromObj(path);
-                        //Logger.LogInfo($"Vertex count obj: {mesh.vertexCount}");
-                        //Logger.LogInfo($"Triangle count obj: {mesh.triangles.Length}");
-                        if (mesh == null)
-                            return;
-                        Logger.LogInfo($"Loaded mesh from file [{path}]");
+                    mesh = meshFromObj(path);
+                    //Logger.LogInfo($"Vertex count obj: {mesh.vertexCount}");
+                    //Logger.LogInfo($"Triangle count obj: {mesh.triangles.Length}");
+                    if (mesh == null)
+                        return;
+                    Logger.LogInfo($"Loaded mesh from file [{path}]");
+                    if (selectItems.Count >= 1)
+                    { 
                         foreach (var i in selectItems)
                         {
                             remeshObject(i, mesh);
@@ -109,12 +104,18 @@ namespace ObjImport
                     }
                     else
                     {
-                        Logger.LogWarning($"File [{path}] is not an OBJ file");
-
+                        OCIItem item = Studio.AddObjectItem.Add(1, 1, 1);
+                        remeshObject(item, mesh);
+                        Logger.LogInfo($"Mesh applied to object [{item.objectItem.name}]");
+                        item.treeNodeObject.textName = path.Substring(path.LastIndexOf("/")).Remove(0, 1);
                     }
-                    
-                } 
-            }
+                }
+                else
+                {
+                    Logger.LogWarning($"File [{path}] is not an OBJ file");
+
+                }
+        }
         }
         private Mesh meshFromObj(string path)
         {
