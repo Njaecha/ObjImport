@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-//using System.Threading.Tasks;
 using UnityEngine;
 
 namespace ObjImport
@@ -50,7 +49,9 @@ namespace ObjImport
                         newUVs[i] = newMesh.uv[(int)v.y - 1];
 
                     if (v.z >= 1)
+                    {
                         newNormals[i] = newMesh.normals[(int)v.z - 1];
+                    }
                     i++;
                 }
 
@@ -58,7 +59,10 @@ namespace ObjImport
 
                 // not supported
                 if (is32bit)
+                {
+                    ObjImport.Logger.LogMessage("ERROR: Mesh has too many vertices (>65k). Reduce the vertexcount or switch to Sunshine!");
                     return null;
+                }
 
                 mesh.vertices = newVerts;
                 mesh.uv = newUVs;
@@ -70,7 +74,7 @@ namespace ObjImport
 
                 return mesh;
             }
-            catch (Exception error)
+            catch(Exception error)
             {
                 ObjImport.Logger.LogError($"And error occured on importing the obj: {error}");
                 return null;
@@ -180,7 +184,6 @@ namespace ObjImport
                     {
                         currentText = currentText.Trim();
                         brokenString = currentText.Split(splitIdentifier);
-                        //ObjImport.Logger.LogDebug($"{currentText}");
                         switch (brokenString[0])
                         {
                             case "g":
@@ -226,12 +229,14 @@ namespace ObjImport
                                     temp.x = System.Convert.ToInt32(brokenBrokenString[0]);
                                     if (brokenBrokenString.Length > 1)                                  //Some .obj files skip UV and normal
                                     {
-                                        if (brokenBrokenString[1] != "")                                    //Some .obj files skip the uv and not the normal
+                                        if (brokenBrokenString[1] != "")                                //Some .obj files skip the uv and not the normal
                                         {
                                             temp.y = System.Convert.ToInt32(brokenBrokenString[1]);
                                         }
-                                        if (brokenBrokenString.Length > 2)                                  //Some .obj files miss the normal completly
+                                        if (brokenBrokenString.Length > 2)                              //Some .obj files miss the normal completly
+                                        {
                                             temp.z = System.Convert.ToInt32(brokenBrokenString[2]);
+                                        }
                                     }
                                     j++;
 

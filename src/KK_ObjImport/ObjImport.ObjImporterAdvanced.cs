@@ -1,16 +1,16 @@
 ﻿/// "borrowed" from https://github.com/aedenthorn/ValheimMods/blob/master/CustomMeshes
+/// modified to create mutliple meshes if the .obj has multiple objects.
 
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace ObjImport
 {
-    public class ObjImporter
+    public class ObjImporterAdvanced
     {
 
         private struct meshStruct
@@ -26,50 +26,63 @@ namespace ObjImport
             public Vector3[] faceData;
             public string name;
             public string fileName;
+            public int startLine;
         }
 
         // Use this for initialization
-        public Mesh ImportFile(string filePath, bool is32bit)
+        public List<Mesh> ImportFile(string filePath, bool is32bit)
         {
             try
             {
-                meshStruct newMesh = createMeshStruct(filePath);
-                populateMeshStruct(ref newMesh);
-
-                Vector3[] newVerts = new Vector3[newMesh.faceData.Length];
-                Vector2[] newUVs = new Vector2[newMesh.faceData.Length];
-                Vector3[] newNormals = new Vector3[newMesh.faceData.Length];
-                int i = 0;
-                /* The following foreach loops through the facedata and assigns the appropriate vertex, uv, or normal
-                 * for the appropriate Unity mesh array.
-                 */
-                foreach (Vector3 v in newMesh.faceData)
+                usedUpVerts = 0;
+                usedUpNorms = 0;
+                usedUpUVs = 0;
+                List<Mesh> meshes = new List<Mesh>();
+                List<meshStruct> newMeshes = createMeshStruct(filePath);
+                for(int ii = 0; ii < newMeshes.Count; ii++)
                 {
-                    newVerts[i] = newMesh.vertices[(int)v.x - 1];
-                    if (v.y >= 1)
-                        newUVs[i] = newMesh.uv[(int)v.y - 1];
-
-                    if (v.z >= 1)
+                    meshStruct newMesh = newMeshes[ii];
+                    populateMeshStruct(ref newMesh);
+                    Vector3[] newVerts = new Vector3[newMesh.faceData.Length];
+                    Vector2[] newUVs = new Vector2[newMesh.faceData.Length];
+                    Vector3[] newNormals = new Vector3[newMesh.faceData.Length];
+                    /* The following foreach loops through the facedata and assigns the appropriate vertex, uv, or normal
+                     * for the appropriate Unity mesh array.
+                     */
+                    int i = 0;
+                    foreach (Vector3 v in newMesh.faceData)
                     {
-                        newNormals[i] = newMesh.normals[(int)v.z - 1];
+                        newVerts[i] = newMesh.vertices[(int)v.x - 1];
+                        if (v.y >= 1)
+                            newUVs[i] = newMesh.uv[(int)v.y - 1];
+
+                        if (v.z >= 1)
+                        {
+                            newNormals[i] = newMesh.normals[(int)v.z - 1];
+                        }
+                        i++;
                     }
-                    i++;
+                    if (is32bit)
+                    {
+                        if(newVerts.Length > 65000)
+                        {
+                            ObjImport.Logger.LogMessage($"ERROR: Mesh [{newMesh.name}] is too big (>65k vertices)!");
+                            return null;
+                        }
+                    }
+                    Mesh mesh = new Mesh();
+
+                    mesh.name = newMesh.name;
+                    mesh.vertices = newVerts;
+                    mesh.uv = newUVs;
+                    mesh.normals = newNormals;
+                    mesh.triangles = newMesh.triangles;
+
+                    mesh.RecalculateBounds();
+                    //mesh.Optimize();
+                    meshes.Add(mesh);
                 }
-
-                Mesh mesh = new Mesh();
-
-                if (is32bit)
-                    mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-
-                mesh.vertices = newVerts;
-                mesh.uv = newUVs;
-                mesh.normals = newNormals;
-                mesh.triangles = newMesh.triangles;
-
-                mesh.RecalculateBounds();
-                mesh.Optimize();
-
-                return mesh;
+                return meshes;
             }
             catch(Exception error)
             {
@@ -78,13 +91,17 @@ namespace ObjImport
             }
         }
 
-        private static meshStruct createMeshStruct(string filename)
+        private static List<meshStruct> createMeshStruct(string filename)
         {
+            List<meshStruct> meshStructs = new List<meshStruct>();
             int triangles = 0;
             int vertices = 0;
             int vt = 0;
             int vn = 0;
             int face = 0;
+            int line = 0;
+            int startLine = 0;
+            int endLine = 0;
             meshStruct mesh = new meshStruct();
             mesh.fileName = filename;
             StreamReader stream = File.OpenText(filename);
@@ -98,9 +115,10 @@ namespace ObjImport
                 while (currentText != null)
                 {
                     if (!currentText.StartsWith("f ") && !currentText.StartsWith("v ") && !currentText.StartsWith("vt ")
-                        && !currentText.StartsWith("vn "))
+                        && !currentText.StartsWith("vn ") && !currentText.StartsWith("o "))
                     {
                         currentText = reader.ReadLine();
+                        line++;
                         if (currentText != null)
                         {
                             currentText = currentText.Replace("  ", " ");
@@ -127,8 +145,13 @@ namespace ObjImport
                                                                                      3 vertices.  For each additional vertice, there is an additional
                                                                                      triangle in the mesh (hence this formula).*/
                                 break;
+                            case "o":                               //create a new mesh whenever a new object starts.
+                                endLine = line;
+                                finishMesh();
+                                break;
                         }
                         currentText = reader.ReadLine();
+                        line++;
                         if (currentText != null)
                         {
                             currentText = currentText.Replace("  ", " ");
@@ -136,20 +159,48 @@ namespace ObjImport
                     }
                 }
             }
-            mesh.triangles = new int[triangles];
-            mesh.vertices = new Vector3[vertices];
-            mesh.uv = new Vector2[vt];
-            mesh.normals = new Vector3[vn];
-            mesh.faceData = new Vector3[face];
-            return mesh;
+            void finishMesh()
+            {
+                if (vertices > 0)
+                {
+                    mesh.triangles = new int[triangles];
+                    mesh.vertices = new Vector3[vertices];
+                    mesh.uv = new Vector2[vt];
+                    mesh.normals = new Vector3[vn];
+                    mesh.faceData = new Vector3[face];
+                    mesh.startLine = startLine;
+                    meshStructs.Add(mesh);
+                    triangles = 0;
+                    vertices = 0;
+                    vt = 0;
+                    vn = 0;
+                    face = 0;
+                    startLine = endLine;
+                    mesh = new meshStruct();
+                    mesh.fileName = filename;
+                }
+            }
+            finishMesh();
+            return meshStructs;
         }
+
+        // I have to subtract this from the number that the obj saves for each vertex of a face
+        // because the obj refers to its entire list and I only have the verts of the current object
+        private static int usedUpVerts = 0;
+        private static int usedUpNorms = 0;
+        private static int usedUpUVs = 0;
 
         private static void populateMeshStruct(ref meshStruct mesh)
         {
             StreamReader stream = File.OpenText(mesh.fileName);
-            string entireText = stream.ReadToEnd();
+            foreach (int ii in Enumerable.Range(0, mesh.startLine))
+            {
+                stream.ReadLine();
+            }
+            string objectText = stream.ReadToEnd();
             stream.Close();
-            using (StringReader reader = new StringReader(entireText))
+
+            using (StringReader reader = new StringReader(objectText))
             {
                 string currentText = reader.ReadLine();
 
@@ -164,12 +215,13 @@ namespace ObjImport
                 int vt = 0;
                 int vt1 = 0;
                 int vt2 = 0;
+                bool skippedFirstO = false;
                 while (currentText != null)
                 {
                     if (!currentText.StartsWith("f ") && !currentText.StartsWith("v ") && !currentText.StartsWith("vt ") &&
                         !currentText.StartsWith("vn ") && !currentText.StartsWith("g ") && !currentText.StartsWith("usemtl ") &&
                         !currentText.StartsWith("mtllib ") && !currentText.StartsWith("vt1 ") && !currentText.StartsWith("vt2 ") &&
-                        !currentText.StartsWith("vc ") && !currentText.StartsWith("usemap "))
+                        !currentText.StartsWith("vc ") && !currentText.StartsWith("usemap ") && !currentText.StartsWith("o "))
                     {
                         currentText = reader.ReadLine();
                         if (currentText != null)
@@ -216,23 +268,22 @@ namespace ObjImport
                             case "vc":
                                 break;
                             case "f":
-
                                 int j = 1;
                                 List<int> intArray = new List<int>();
                                 while (j < brokenString.Length && ("" + brokenString[j]).Length > 0)
                                 {
                                     Vector3 temp = new Vector3();
                                     brokenBrokenString = brokenString[j].Split(splitIdentifier2, 3);    //Separate the face into individual components (vert, uv, normal)
-                                    temp.x = System.Convert.ToInt32(brokenBrokenString[0]);
+                                    temp.x = System.Convert.ToInt32(brokenBrokenString[0]) - usedUpVerts; //subtract number of vertieces used by other objects before
                                     if (brokenBrokenString.Length > 1)                                  //Some .obj files skip UV and normal
                                     {
                                         if (brokenBrokenString[1] != "")                                //Some .obj files skip the uv and not the normal
                                         {
-                                            temp.y = System.Convert.ToInt32(brokenBrokenString[1]);
+                                            temp.y = System.Convert.ToInt32(brokenBrokenString[1]) - usedUpUVs; //subtract number of UVs used by other objects before
                                         }
                                         if (brokenBrokenString.Length > 2)                              //Some .obj files miss the normal completly
                                         {
-                                            temp.z = System.Convert.ToInt32(brokenBrokenString[2]);
+                                            temp.z = System.Convert.ToInt32(brokenBrokenString[2]) - usedUpNorms; //subtract number of Normals used by other objects before
                                         }
                                     }
                                     j++;
@@ -252,6 +303,20 @@ namespace ObjImport
                                     f++;
 
                                     j++;
+                                }
+                                break;
+                            case "o":
+                                if (skippedFirstO)
+                                {
+                                    usedUpVerts += v; //add the amount of vertices this object has to the usedUpVerts
+                                    usedUpNorms += vn; //add the amount of normals this object has to the usedUpNorms
+                                    usedUpUVs += vt; //add the amount of UVs this object has to the usedUpUVs
+                                    return;
+                                }
+                                else
+                                {
+                                    mesh.name = brokenString[1];
+                                    skippedFirstO = true;
                                 }
                                 break;
                         }

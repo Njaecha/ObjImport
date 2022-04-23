@@ -23,6 +23,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -34,7 +35,12 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
+    <Reference Include="0Harmony, Version=2.5.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\_Libs_KKS\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\_Libs_KKS\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -47,11 +53,15 @@
     <Reference Include="BepInEx">
       <HintPath>..\..\..\_Libs_KKS\BepInEx.dll</HintPath>
     </Reference>
-    <Reference Include="KKSAPI">
+    <Reference Include="KKSAPI, Version=1.26.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\_Libs_KKS\KKSAPI.dll</HintPath>
     </Reference>
     <Reference Include="KKS_ExtensibleSaveFormat">
       <HintPath>..\..\..\_Libs_KKS\KKS_ExtensibleSaveFormat.dll</HintPath>
+    </Reference>
+    <Reference Include="KKS_MaterialEditor">
+      <HintPath>..\..\..\_Libs_KKS\KKS_MaterialEditor.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -59,6 +69,9 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>..\..\..\_Libs_KKS\Unity.TextMeshPro.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>..\..\..\_Libs_KKS\UnityEngine.dll</HintPath>
     </Reference>
@@ -84,9 +97,16 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\_Libs_KKS\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
+    <Reference Include="Vectrosity, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\_Libs_KKS\Vectrosity.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MeshSerializer.cs" />
+    <Compile Include="ObjImport.MeshSerializer.cs" />
+    <Compile Include="ObjImport.CharacterController.cs" />
+    <Compile Include="ObjImport.Hooks.cs" />
+    <Compile Include="ObjImport.ObjImporterAdvanced.cs" />
     <Compile Include="Objimport.SceneController.cs" />
     <Compile Include="ObjImport.ObjImporter.cs" />
     <Compile Include="ObjImport.cs" />

@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,7 +32,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
+    <Reference Include="0Harmony">
+      <HintPath>..\..\..\_Libs_KK\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\_Libs_KK\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
@@ -46,20 +51,33 @@
     <Reference Include="KKAPI">
       <HintPath>..\..\..\_Libs_KK\KKAPI.dll</HintPath>
     </Reference>
+    <Reference Include="KK_MaterialEditor">
+      <HintPath>..\..\..\_Libs_KK\KK_MaterialEditor.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="TextMeshPro-1.0.55.56.0b12">
+      <HintPath>..\..\..\_Libs_KK\TextMeshPro-1.0.55.56.0b12.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>..\..\..\_Libs_KK\UnityEngine.dll</HintPath>
     </Reference>
+    <Reference Include="Vectrosity, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\_Libs_KK\Vectrosity.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MeshSerializer.cs" />
+    <Compile Include="ObjImport.CharacterController.cs" />
     <Compile Include="ObjImport.cs" />
+    <Compile Include="ObjImport.Hooks.cs" />
+    <Compile Include="ObjImport.MeshSerializer.cs" />
     <Compile Include="ObjImport.ObjImporter.cs" />
+    <Compile Include="ObjImport.ObjImporterAdvanced.cs" />
     <Compile Include="Objimport.SceneController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
