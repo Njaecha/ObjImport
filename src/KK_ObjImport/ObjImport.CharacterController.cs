@@ -262,8 +262,12 @@ namespace ObjImport
                 {
                     remeshData[type][destination] = remeshData[type][source];
                     ObjImport.Logger.LogDebug($"Source slot {source} --> Destination slot {destination}");
-                    updateMeshes();
                 }
+                else if (remeshData[type].ContainsKey(destination))
+                {
+                    remeshData[type].Remove(destination);
+                }
+                updateMeshes();
             }
         }
 
@@ -272,7 +276,6 @@ namespace ObjImport
             yield return new WaitForSeconds(delay);
             if (remeshData.ContainsKey(source))
             {
-                ObjImport.Logger.LogDebug("accessoryCopiedEvent");
                 if (!remeshData.ContainsKey(destination))
                     remeshData[destination] = new Dictionary<int, List<Mesh>>();
                 foreach (int slot in slots)
@@ -281,10 +284,28 @@ namespace ObjImport
                     {
                         remeshData[destination][slot] = remeshData[source][slot];
                         ObjImport.Logger.LogDebug($"Source: Type {source}, Slot {slot} --> Destination: Type {destination}");
-                        updateMeshes();
+                    }
+                    else if (remeshData[destination].ContainsKey(slot))
+                    {
+                        remeshData[destination].Remove(slot);
                     }
                 }
+                if (ChaControl.fileStatus.coordinateType == destination) ChaControl.Reload(false, true, true, true);
+
             }
+            else if (remeshData.ContainsKey(destination))
+            {
+                foreach (int slot in slots)
+                {
+                    if (remeshData[destination].ContainsKey(slot))
+                    {
+                        remeshData[destination].Remove(slot);
+                    }
+                }
+                if (ChaControl.fileStatus.coordinateType == destination) ChaControl.Reload(false, true, true, true);
+            }
+            if (ChaControl.fileStatus.coordinateType == source || ChaControl.fileStatus.coordinateType == destination)
+                updateMeshes();
         }
         /// <summary>
         /// Updates all custom meshes on the current coordinate. Use when the game reloads accessories
