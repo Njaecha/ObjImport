@@ -80,13 +80,15 @@ namespace ObjImport
                         }
                     }
                 }
-                data.data.Add($"slots{coordinateNum}", MessagePackSerializer.Serialize(slots));
+                if (slots.Count > 0)
+                    data.data.Add($"slots{coordinateNum}", MessagePackSerializer.Serialize(slots));
                 List<byte[]> byteArrays = new List<byte[]>();
                 foreach (List<Mesh> objectMeshes in meshes)
                 {
                     byteArrays.Add(SimpleMeshSerializer.Serialize(objectMeshes));
                 }
-                data.data.Add($"meshes{coordinateNum}", MessagePackSerializer.Serialize(byteArrays));
+                if (byteArrays.Count > 0)
+                    data.data.Add($"meshes{coordinateNum}", MessagePackSerializer.Serialize(byteArrays));
 
                 if (slots.Count > 0)
                 {
@@ -113,6 +115,8 @@ namespace ObjImport
         {
             if (data == null) return false;
 
+            bool didSomething = false;
+
             List<int> slots = new List<int>();
             List<List<Mesh>> meshes = new List<List<Mesh>>();
 
@@ -138,8 +142,9 @@ namespace ObjImport
                     ObjImport.Logger.LogError($"Remeshing of accessory in slot {slots[i]} failed!");
                     x = false;
                 }
+                didSomething = true;
             }
-            ChaControl.StartCoroutine(ChaControl.GetComponent<MaterialEditorCharaController>().LoadData(false, true, false));
+            if (didSomething) ChaControl.StartCoroutine(ChaControl.GetComponent<MaterialEditorCharaController>().LoadData(false, true, false));
             return x;
         }
 
@@ -153,6 +158,7 @@ namespace ObjImport
             if (data == null) return false;
 
             bool noIssue = true;
+            bool didSomething = false;
 
             Dictionary<int, List<int>> coSlots = new Dictionary<int, List<int>>();
             Dictionary<int, List<List<Mesh>>> coMeshes = new Dictionary<int, List<List<Mesh>>>();
@@ -187,6 +193,7 @@ namespace ObjImport
                             ObjImport.Logger.LogError($"Remeshing of accessory in slot {slots[i]} failed!");
                             noIssue = false;
                         }
+                        didSomething = true;
                     }
                 }
             }
@@ -202,7 +209,7 @@ namespace ObjImport
                     }
                 }
             }
-            ChaControl.StartCoroutine(ChaControl.GetComponent<MaterialEditorCharaController>().LoadData(false, true, false));
+            if (didSomething) ChaControl.StartCoroutine(ChaControl.GetComponent<MaterialEditorCharaController>().LoadData(false, true, false));
             return noIssue;
         }
 
@@ -347,8 +354,11 @@ namespace ObjImport
 
         protected override void OnCardBeingSaved(GameMode currentGameMode)
         {
-            PluginData data = new PluginData();
-            SetExtendedData(fillCharacterData(data));
+            if (remeshData.Count > 0 && remeshData.Where(item => item.Value?.Count > 0).Any())
+            {
+                PluginData data = new PluginData();
+                SetExtendedData(fillCharacterData(data));
+            }
         }
 
         protected override void OnReload(GameMode currentGameMode, Boolean maintainState)
@@ -364,6 +374,7 @@ namespace ObjImport
 
         protected override void OnCoordinateBeingSaved(ChaFileCoordinate coordinate)
         {
+            if (!remeshData.ContainsKey(ChaControl.fileStatus.coordinateType) || !(remeshData[ChaControl.fileStatus.coordinateType].Count > 0)) return;
             PluginData data = new PluginData();
             SetCoordinateExtendedData(coordinate, fillCoordinateData(data));
         }

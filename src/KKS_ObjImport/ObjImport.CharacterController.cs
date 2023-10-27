@@ -114,6 +114,8 @@ namespace ObjImport
         {
             if (data == null) return false;
 
+            bool didSomething = false;
+
             List<int> slots = new List<int>();
             List<List<Mesh>> meshes = new List<List<Mesh>>();
 
@@ -130,18 +132,19 @@ namespace ObjImport
                 slots = MessagePackSerializer.Deserialize<List<int>>((byte[])slotsSerialized);
             }
 
-            bool x = true;
+            bool noIssue = true;
 
             for(int i = 0; i < slots.Count; i++)
             {
                 if (!ObjImport.remeshObject(ChaControl, ChaControl.fileStatus.coordinateType, slots[i], ChaControl.GetAccessoryComponent(slots[i]), meshes[i]))
                 {
                     ObjImport.Logger.LogError($"Remeshing of accessory in slot {slots[i]} failed!");
-                    x = false;
+                    noIssue = false;
                 }
+                didSomething = true;
             }
-            ChaControl.StartCoroutine(ChaControl.GetComponent<MaterialEditorCharaController>().LoadData(false, true, false));
-            return x;
+            if (didSomething) ChaControl.StartCoroutine(ChaControl.GetComponent<MaterialEditorCharaController>().LoadData(false, true, false));
+            return noIssue;
         }
 
         /// <summary>
@@ -154,6 +157,7 @@ namespace ObjImport
             if (data == null) return false;
 
             bool noIssue = true;
+            bool didSomething = false;
 
             Dictionary<int, List<int>> coSlots = new Dictionary<int, List<int>>();
             Dictionary<int, List<List<Mesh>>> coMeshes = new Dictionary<int, List<List<Mesh>>>();
@@ -188,6 +192,7 @@ namespace ObjImport
                             ObjImport.Logger.LogError($"Remeshing of accessory in slot {slots[i]} failed!");
                             noIssue = false;
                         }
+                        didSomething = true;
                     }
                 }
             }
@@ -203,7 +208,7 @@ namespace ObjImport
                     }
                 }
             }
-            ChaControl.StartCoroutine(ChaControl.GetComponent<MaterialEditorCharaController>().LoadData(false, true, false));
+            if (didSomething) ChaControl.StartCoroutine(ChaControl.GetComponent<MaterialEditorCharaController>().LoadData(false, true, false));
             return noIssue;
         }
 
@@ -348,8 +353,11 @@ namespace ObjImport
 
         protected override void OnCardBeingSaved(GameMode currentGameMode)
         {
-            PluginData data = new PluginData();
-            SetExtendedData(fillCharacterData(data));
+            if (!remeshData.IsNullOrEmpty() && remeshData.Where(item => !item.Value.IsNullOrEmpty()).Any())
+            {
+                PluginData data = new PluginData();
+                SetExtendedData(fillCharacterData(data));
+            }
         }
 
         protected override void OnReload(GameMode currentGameMode, Boolean maintainState)
@@ -365,6 +373,7 @@ namespace ObjImport
 
         protected override void OnCoordinateBeingSaved(ChaFileCoordinate coordinate)
         {
+            if (!remeshData.ContainsKey(ChaControl.fileStatus.coordinateType) || remeshData[ChaControl.fileStatus.coordinateType].IsNullOrEmpty()) return;
             PluginData data = new PluginData();
             SetCoordinateExtendedData(coordinate, fillCoordinateData(data));
         }
