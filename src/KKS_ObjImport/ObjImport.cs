@@ -25,7 +25,7 @@ namespace ObjImport
         //plugin
         public const string PluginName = "KKS_ObjImport";
         public const string GUID = "org.njaecha.plugins.objimport";
-        public const string Version = "2.1.4";
+        public const string Version = "2.1.5";
 
         internal new static ManualLogSource Logger;
 
@@ -425,7 +425,9 @@ namespace ObjImport
 
             ((OCIItem)oci).arrayRender = newRendererArray;
             itemComponent.rendNormal = newRendererArray;
+            itemComponent.rendAlpha = new Renderer[0];
 
+            KK_Plugins.MaterialEditor.MaterialEditorPlugin.ClearCache(rootObject);
             sceneRemeshedObjects[oci] = meshes;
         }
 
@@ -487,6 +489,8 @@ namespace ObjImport
                     controller.remeshData[outfitType] = new Dictionary<int, List<Mesh>>();
                 if (!(controller.remeshData[outfitType].ContainsKey(slot) && controller.remeshData[outfitType][slot] == meshes))
                     controller.remeshData[outfitType][slot] = meshes;
+
+                KK_Plugins.MaterialEditor.MaterialEditorPlugin.ClearCache(rootObject);
                 return true;
             }
             else

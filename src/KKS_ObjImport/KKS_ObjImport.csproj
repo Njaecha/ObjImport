@@ -60,8 +60,9 @@
     <Reference Include="KKS_ExtensibleSaveFormat">
       <HintPath>..\..\..\_Libs_KKS\KKS_ExtensibleSaveFormat.dll</HintPath>
     </Reference>
-    <Reference Include="KKS_MaterialEditor">
-      <HintPath>..\..\..\_Libs_KKS\KKS_MaterialEditor.dll</HintPath>
+    <Reference Include="KKS_MaterialEditor, Version=3.1.12.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>P:\Koikatsu_Sunshine\BepInEx\plugins\KKS_Plugins\KKS_MaterialEditor.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

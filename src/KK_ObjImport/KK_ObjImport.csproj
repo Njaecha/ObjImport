@@ -51,8 +51,9 @@
     <Reference Include="KKAPI">
       <HintPath>..\..\..\_Libs_KK\KKAPI.dll</HintPath>
     </Reference>
-    <Reference Include="KK_MaterialEditor">
-      <HintPath>..\..\..\_Libs_KK\KK_MaterialEditor.dll</HintPath>
+    <Reference Include="KK_MaterialEditor, Version=3.1.16.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>P:\Koikatsu\BepInEx\Plugins\KK_Plugins\KK_MaterialEditor.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
