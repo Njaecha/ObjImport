@@ -5,95 +5,102 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using BepInEx.Logging;
 using UnityEngine;
+using WebP;
 
 namespace ObjImport
 {
     public class ObjImporterAdvanced
     {
+        
+        private ManualLogSource Logger;
 
-        private struct meshStruct
+        public ObjImporterAdvanced(ManualLogSource Logger)
         {
-            public Vector3[] vertices;
-            public Vector3[] normals;
-            public Vector2[] uv;
-            public Vector2[] uv1;
-            public Vector2[] uv2;
-            public int[] triangles;
-            public int[] faceVerts;
-            public int[] faceUVs;
-            public Vector3[] faceData;
-            public string name;
-            public string fileName;
-            public int startLine;
+            this.Logger = Logger;
+        }
+
+        public List<Mesh> convertToMesh(List<MeshAdvancedDto> data, bool is32bit)
+        {
+            List<Mesh> meshes = new List<Mesh>();
+
+            for (int ii = 0; ii < data.Count; ii++)
+            {
+                MeshAdvancedDto newMesh = data[ii];
+                populateMeshStruct(ref newMesh);
+                Vector3[] newVerts = new Vector3[newMesh.faceData.Length];
+                Vector2[] newUVs = new Vector2[newMesh.faceData.Length];
+                Vector3[] newNormals = new Vector3[newMesh.faceData.Length];
+                /* The following foreach loops through the facedata and assigns the appropriate vertex, uv, or normal
+                 * for the appropriate Unity mesh array.
+                 */
+                int i = 0;
+                foreach (Vector3 v in newMesh.faceData)
+                {
+                    newVerts[i] = newMesh.vertices[(int)v.x - 1];
+                    if (v.y >= 1)
+                        newUVs[i] = newMesh.uv[(int)v.y - 1];
+
+                    if (v.z >= 1)
+                    {
+                        newNormals[i] = newMesh.normals[(int)v.z - 1];
+                    }
+                    i++;
+                }
+
+                if (is32bit)
+                {
+                    if (newVerts.Length > 65000)
+                    {
+                        Logger.LogMessage($"ERROR: Mesh [{data[ii].name}] is too big (>65k vertices)!");
+                        return null;
+                    }
+                }
+
+                Mesh mesh = new Mesh();
+                mesh.name = data[ii].name;
+                //mesh.name = newMesh.name;
+                mesh.vertices = newVerts;
+                mesh.uv = newUVs;
+                mesh.normals = newNormals;
+                mesh.triangles = newMesh.triangles;
+
+                mesh.RecalculateBounds();
+                //mesh.Optimize();
+                meshes.Add(mesh);
+            }
+            return meshes;
         }
 
         // Use this for initialization
-        public List<Mesh> ImportFile(string filePath, bool is32bit)
+        public List<MeshAdvancedDto> ImportFile(string filePath)
         {
             try
             {
                 usedUpVerts = 0;
                 usedUpNorms = 0;
                 usedUpUVs = 0;
-                List<Mesh> meshes = new List<Mesh>();
-                List<meshStruct> newMeshes = createMeshStruct(filePath);
-                for(int ii = 0; ii < newMeshes.Count; ii++)
+                List<MeshAdvancedDto> newMeshes = createMeshStruct(filePath);
+                if (newMeshes == null)
                 {
-                    meshStruct newMesh = newMeshes[ii];
-                    populateMeshStruct(ref newMesh);
-                    Vector3[] newVerts = new Vector3[newMesh.faceData.Length];
-                    Vector2[] newUVs = new Vector2[newMesh.faceData.Length];
-                    Vector3[] newNormals = new Vector3[newMesh.faceData.Length];
-                    /* The following foreach loops through the facedata and assigns the appropriate vertex, uv, or normal
-                     * for the appropriate Unity mesh array.
-                     */
-                    int i = 0;
-                    foreach (Vector3 v in newMesh.faceData)
-                    {
-                        newVerts[i] = newMesh.vertices[(int)v.x - 1];
-                        if (v.y >= 1)
-                            newUVs[i] = newMesh.uv[(int)v.y - 1];
-
-                        if (v.z >= 1)
-                        {
-                            newNormals[i] = newMesh.normals[(int)v.z - 1];
-                        }
-                        i++;
-                    }
-                    if (is32bit)
-                    {
-                        if(newVerts.Length > 65000)
-                        {
-                            ObjImport.Logger.LogMessage($"ERROR: Mesh [{newMesh.name}] is too big (>65k vertices)!");
-                            return null;
-                        }
-                    }
-                    Mesh mesh = new Mesh();
-
-                    mesh.name = newMesh.name;
-                    mesh.vertices = newVerts;
-                    mesh.uv = newUVs;
-                    mesh.normals = newNormals;
-                    mesh.triangles = newMesh.triangles;
-
-                    mesh.RecalculateBounds();
-                    //mesh.Optimize();
-                    meshes.Add(mesh);
+                    Logger.LogError("Error in creating mesh structures.");
+                    return null;
                 }
-                return meshes;
+
+                return newMeshes;
             }
             catch(Exception error)
             {
-                ObjImport.Logger.LogError($"And error occured on importing the obj: {error}");
+                Logger.LogError($"And error occured on importing the obj: {error}");
                 return null;
             }
         }
 
-        private static List<meshStruct> createMeshStruct(string filename)
+        private List<MeshAdvancedDto> createMeshStruct(string filename)
         {
-            List<meshStruct> meshStructs = new List<meshStruct>();
+
+            List<MeshAdvancedDto> meshStructs = new List<MeshAdvancedDto>();
             int triangles = 0;
             int vertices = 0;
             int vt = 0;
@@ -102,11 +109,16 @@ namespace ObjImport
             int line = 0;
             int startLine = 0;
             int endLine = 0;
-            meshStruct mesh = new meshStruct();
+            string mtlFile = null;
+
+            MeshAdvancedDto mesh = new MeshAdvancedDto();
             mesh.fileName = filename;
+            string usedMaterial = "default";
+
             StreamReader stream = File.OpenText(filename);
             string entireText = stream.ReadToEnd();
             stream.Close();
+
             using (StringReader reader = new StringReader(entireText))
             {
                 string currentText = reader.ReadLine();
@@ -114,7 +126,29 @@ namespace ObjImport
                 string[] brokenString;
                 while (currentText != null)
                 {
-                    if (!currentText.StartsWith("f ") && !currentText.StartsWith("v ") && !currentText.StartsWith("vt ")
+                    if (currentText.StartsWith("mtllib "))
+                    {
+                        //Logger.LogError("mtllib");
+                        mtlFile = currentText.Substring(7).Trim();
+                        line++;
+                        currentText = reader.ReadLine();
+                        if (currentText != null)
+                        {
+                            currentText = currentText.Replace("  ", " ");
+                        }
+                    }
+                    else if (currentText.StartsWith("usemtl "))
+                    {
+                        //Logger.LogError("usemtl");
+                        usedMaterial = currentText.Substring(7).Trim();
+                        line++;
+                        currentText = reader.ReadLine();
+                        if (currentText != null)
+                        {
+                            currentText = currentText.Replace("  ", " ");
+                        }
+                    }
+                    else if (!currentText.StartsWith("f ") && !currentText.StartsWith("v ") && !currentText.StartsWith("vt ")
                         && !currentText.StartsWith("vn ") && !currentText.StartsWith("o "))
                     {
                         currentText = reader.ReadLine();
@@ -140,10 +174,13 @@ namespace ObjImport
                                 vn++;
                                 break;
                             case "f":
-                                face = face + brokenString.Length - 1;
-                                triangles = triangles + 3 * (brokenString.Length - 2); /*brokenString.Length is 3 or greater since a face must have at least
+                                if (brokenString.Length > 1)
+                                {
+                                    face = face + brokenString.Length - 1;
+                                    triangles = triangles + 3 * (brokenString.Length - 2); /*brokenString.Length is 3 or greater since a face must have at least
                                                                                      3 vertices.  For each additional vertice, there is an additional
                                                                                      triangle in the mesh (hence this formula).*/
+                                }
                                 break;
                             case "o":                               //create a new mesh whenever a new object starts.
                                 endLine = line;
@@ -169,15 +206,21 @@ namespace ObjImport
                     mesh.normals = new Vector3[vn];
                     mesh.faceData = new Vector3[face];
                     mesh.startLine = startLine;
+                    mesh.usedMaterial = usedMaterial;
+                    mesh.mtlFile = mtlFile;
                     meshStructs.Add(mesh);
+
+
                     triangles = 0;
                     vertices = 0;
                     vt = 0;
                     vn = 0;
                     face = 0;
                     startLine = endLine;
-                    mesh = new meshStruct();
+
+                    mesh = new MeshAdvancedDto();
                     mesh.fileName = filename;
+
                 }
             }
             finishMesh();
@@ -190,7 +233,7 @@ namespace ObjImport
         private static int usedUpNorms = 0;
         private static int usedUpUVs = 0;
 
-        private static void populateMeshStruct(ref meshStruct mesh)
+        private static void populateMeshStruct(ref MeshAdvancedDto mesh)
         {
             StreamReader stream = File.OpenText(mesh.fileName);
             foreach (int ii in Enumerable.Range(0, mesh.startLine))

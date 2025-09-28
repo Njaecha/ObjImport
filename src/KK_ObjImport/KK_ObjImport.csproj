@@ -33,27 +33,27 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>..\..\..\_Libs_KK\0Harmony.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu BetterRepack RX21\BepInEx\core\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\_Libs_KK\Assembly-CSharp.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu BetterRepack RX21\Koikatu_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>..\..\..\_Libs_KK\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu BetterRepack RX21\Koikatu_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx">
-      <HintPath>..\..\..\_Libs_KK\BepInEx.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu BetterRepack RX21\BepInEx\core\BepInEx.dll</HintPath>
     </Reference>
     <Reference Include="ExtensibleSaveFormat">
-      <HintPath>..\..\..\_Libs_KK\ExtensibleSaveFormat.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu BetterRepack RX21\BepInEx\plugins\KK_BepisPlugins\ExtensibleSaveFormat.dll</HintPath>
     </Reference>
     <Reference Include="KKAPI">
-      <HintPath>..\..\..\_Libs_KK\KKAPI.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu BetterRepack RX21\BepInEx\plugins\KKAPI.dll</HintPath>
     </Reference>
     <Reference Include="KK_MaterialEditor, Version=3.1.16.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>P:\Koikatsu\BepInEx\Plugins\KK_Plugins\KK_MaterialEditor.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu BetterRepack RX21\BepInEx\plugins\KK_Plugins\KK_MaterialEditor.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -62,20 +62,22 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="TextMeshPro-1.0.55.56.0b12">
-      <HintPath>..\..\..\_Libs_KK\TextMeshPro-1.0.55.56.0b12.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu BetterRepack RX21\Koikatu_Data\Managed\TextMeshPro-1.0.55.56.0b12.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>..\..\..\_Libs_KK\UnityEngine.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu BetterRepack RX21\Koikatu_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="Vectrosity, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\_Libs_KK\Vectrosity.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu BetterRepack RX21\Koikatu_Data\Managed\Vectrosity.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ObjImport.CharacterController.cs" />
     <Compile Include="ObjImport.cs" />
     <Compile Include="ObjImport.Hooks.cs" />
+    <Compile Include="ObjImport.MeshDtos.cs" />
+    <Compile Include="ObjImport.MaterialImporter.cs" />
     <Compile Include="ObjImport.MeshSerializer.cs" />
     <Compile Include="ObjImport.ObjImporter.cs" />
     <Compile Include="ObjImport.ObjImporterAdvanced.cs" />
@@ -84,6 +86,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy "$(TargetPath)" "P:\Koikatsu\BepInEx\plugins\KK_ObjImport.dll"</PostBuildEvent>
+    <PostBuildEvent>copy "$(TargetPath)" "G:\Games\Koikatsu BetterRepack RX21\BepInEx\plugins\KK_ObjImport.dll"</PostBuildEvent>
   </PropertyGroup>
 </Project>

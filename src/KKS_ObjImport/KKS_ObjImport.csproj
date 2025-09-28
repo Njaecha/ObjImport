@@ -37,32 +37,29 @@
   <ItemGroup>
     <Reference Include="0Harmony, Version=2.5.4.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\_Libs_KKS\0Harmony.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu Sunshine EX BetterRepack R12\BepInEx\core\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\_Libs_KKS\Assembly-CSharp.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu Sunshine EX BetterRepack R12\KoikatsuSunshine_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\_Libs_KKS\Assembly-CSharp-firstpass.dll</HintPath>
-    </Reference>
-    <Reference Include="AssimpNet">
-      <HintPath>..\..\..\_Libs_KKS\AssimpNet.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu Sunshine EX BetterRepack R12\KoikatsuSunshine_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx">
-      <HintPath>..\..\..\_Libs_KKS\BepInEx.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu Sunshine EX BetterRepack R12\BepInEx\core\BepInEx.dll</HintPath>
     </Reference>
     <Reference Include="KKSAPI, Version=1.26.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\_Libs_KKS\KKSAPI.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu Sunshine EX BetterRepack R12\BepInEx\plugins\KKSAPI.dll</HintPath>
     </Reference>
     <Reference Include="KKS_ExtensibleSaveFormat">
-      <HintPath>..\..\..\_Libs_KKS\KKS_ExtensibleSaveFormat.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu Sunshine EX BetterRepack R12\BepInEx\plugins\KKS_BepisPlugins\KKS_ExtensibleSaveFormat.dll</HintPath>
     </Reference>
     <Reference Include="KKS_MaterialEditor, Version=3.1.12.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>P:\Koikatsu_Sunshine\BepInEx\plugins\KKS_Plugins\KKS_MaterialEditor.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu Sunshine EX BetterRepack R12\BepInEx\plugins\KKS_Plugins\KKS_MaterialEditor.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -71,39 +68,41 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>..\..\..\_Libs_KKS\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu Sunshine EX BetterRepack R12\KoikatsuSunshine_Data\Managed\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>..\..\..\_Libs_KKS\UnityEngine.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu Sunshine EX BetterRepack R12\KoikatsuSunshine_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\..\..\_Libs_KKS\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu Sunshine EX BetterRepack R12\KoikatsuSunshine_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\_Libs_KKS\UnityEngine.ImageConversionModule.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu Sunshine EX BetterRepack R10\KoikatsuSunshine_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.IMGUIModule">
-      <HintPath>..\..\..\_Libs_KKS\UnityEngine.IMGUIModule.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu Sunshine EX BetterRepack R12\KoikatsuSunshine_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.InputLegacyModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\_Libs_KKS\UnityEngine.InputLegacyModule.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu Sunshine EX BetterRepack R12\KoikatsuSunshine_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.InputModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\_Libs_KKS\UnityEngine.InputModule.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu Sunshine EX BetterRepack R12\KoikatsuSunshine_Data\Managed\UnityEngine.InputModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\_Libs_KKS\UnityEngine.PhysicsModule.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu Sunshine EX BetterRepack R12\KoikatsuSunshine_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="Vectrosity, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\_Libs_KKS\Vectrosity.dll</HintPath>
+      <HintPath>G:\Games\Koikatsu Sunshine EX BetterRepack R12\KoikatsuSunshine_Data\Managed\Vectrosity.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ObjImport.MaterialImporter.cs" />
+    <Compile Include="ObjImport.MeshDtos.cs" />
     <Compile Include="ObjImport.MeshSerializer.cs" />
     <Compile Include="ObjImport.CharacterController.cs" />
     <Compile Include="ObjImport.Hooks.cs" />
@@ -115,6 +114,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy "$(TargetPath)" "P:\Koikatsu_Sunshine\BepInEx\plugins\KKS_ObjImport.dll"</PostBuildEvent>
+    <PostBuildEvent>copy "$(TargetPath)" "G:\Games\Koikatsu Sunshine EX BetterRepack R12\BepInEx\plugins\KKS_ObjImport.dll"</PostBuildEvent>
   </PropertyGroup>
 </Project>

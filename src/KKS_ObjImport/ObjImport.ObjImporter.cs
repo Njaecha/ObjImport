@@ -5,137 +5,115 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using BepInEx.Logging;
+using KK_Plugins.MaterialEditor;
+using MaterialEditorAPI;
 using UnityEngine;
 
 namespace ObjImport
 {
     public class ObjImporter
     {
+        private ManualLogSource Logger;
 
-        private struct meshStruct
+        public ObjImporter(ManualLogSource Logger)
         {
-            public Vector3[] vertices;
-            public Vector3[] normals;
-            public Vector2[] uv;
-            public Vector2[] uv1;
-            public Vector2[] uv2;
-            public int[] triangles;
-            public int[] faceVerts;
-            public int[] faceUVs;
-            public Vector3[] faceData;
-            public string name;
-            public string fileName;
+            this.Logger = Logger;
         }
 
-        // Use this for initialization
-        public Mesh ImportFile(string filePath, bool is32bit)
+        public Mesh convertToMesh(MeshDto data, bool is32bit)
         {
+
+            if (is32bit)
+            {
+                Logger.LogMessage("ERROR: Mesh has too many vertices (>65k).");
+                return null;
+            }
+
+            populateMeshStruct(ref data);
+            Vector3[] newVerts = new Vector3[data.faceData.Length];
+            Vector2[] newUVs = new Vector2[data.faceData.Length];
+            Vector3[] newNormals = new Vector3[data.faceData.Length];
+
             try
             {
-                meshStruct newMesh = createMeshStruct(filePath);
-                populateMeshStruct(ref newMesh);
-
-                Vector3[] newVerts = new Vector3[newMesh.faceData.Length];
-                Vector2[] newUVs = new Vector2[newMesh.faceData.Length];
-                Vector3[] newNormals = new Vector3[newMesh.faceData.Length];
                 int i = 0;
-                /* The following foreach loops through the facedata and assigns the appropriate vertex, uv, or normal
-                 * for the appropriate Unity mesh array.
-                 */
-                foreach (Vector3 v in newMesh.faceData)
+                foreach (Vector3 v in data.faceData)
                 {
-                    newVerts[i] = newMesh.vertices[(int)v.x - 1];
+                    newVerts[i] = data.vertices[(int)v.x - 1];
                     if (v.y >= 1)
-                        newUVs[i] = newMesh.uv[(int)v.y - 1];
-
+                        newUVs[i] = data.uv[(int)v.y - 1];
                     if (v.z >= 1)
-                    {
-                        newNormals[i] = newMesh.normals[(int)v.z - 1];
-                    }
+                        newNormals[i] = data.normals[(int)v.z - 1];
                     i++;
                 }
-
-                Mesh mesh = new Mesh();
-
-                if (is32bit)
-                    mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-
-                mesh.vertices = newVerts;
-                mesh.uv = newUVs;
-                mesh.normals = newNormals;
-                mesh.triangles = newMesh.triangles;
-
-                mesh.RecalculateBounds();
-                mesh.Optimize();
-
-                return mesh;
             }
-            catch(Exception error)
+            catch (Exception ex)
             {
-                ObjImport.Logger.LogError($"And error occured on importing the obj: {error}");
+                Logger.LogMessage("ERROR: Obj files seems to contain multi model information, use Multi-Object Mode!");
+                return null;
+            }
+
+
+            Mesh mesh = new Mesh();
+            mesh.name = data.name;
+            mesh.vertices = newVerts;
+            mesh.uv = newUVs;
+            mesh.normals = newNormals;
+            mesh.triangles = data.triangles;
+            mesh.RecalculateBounds();
+
+            return mesh;
+        }
+
+        // Original ImportFile unchanged except it calls createMeshStruct/populateMeshStruct
+        public MeshDto ImportFile(string filePath)
+        {
+
+            try
+            {
+                MeshDto newMesh = createMeshStruct(filePath);
+                return newMesh;
+            }
+            catch (Exception error)
+            {
+                Logger.LogError($"An error occurred on importing the obj: {error}");
                 return null;
             }
         }
 
-        private static meshStruct createMeshStruct(string filename)
+        // Extended parser to catch mtllib + usemtl
+        private static MeshDto createMeshStruct(string filename)
         {
-            int triangles = 0;
-            int vertices = 0;
-            int vt = 0;
-            int vn = 0;
-            int face = 0;
-            meshStruct mesh = new meshStruct();
+            int triangles = 0, vertices = 0, vt = 0, vn = 0, face = 0;
+            MeshDto mesh = new MeshDto();
+
             mesh.fileName = filename;
-            StreamReader stream = File.OpenText(filename);
-            string entireText = stream.ReadToEnd();
-            stream.Close();
-            using (StringReader reader = new StringReader(entireText))
+            mesh.usedMaterial = "default";
+
+            foreach (var line in File.ReadAllLines(filename))
             {
-                string currentText = reader.ReadLine();
-                char[] splitIdentifier = { ' ' };
-                string[] brokenString;
-                while (currentText != null)
+                string currentText = line.Trim();
+                if (currentText.StartsWith("mtllib "))
                 {
-                    if (!currentText.StartsWith("f ") && !currentText.StartsWith("v ") && !currentText.StartsWith("vt ")
-                        && !currentText.StartsWith("vn "))
-                    {
-                        currentText = reader.ReadLine();
-                        if (currentText != null)
-                        {
-                            currentText = currentText.Replace("  ", " ");
-                        }
-                    }
-                    else
-                    {
-                        currentText = currentText.Trim();                           //Trim the current line
-                        brokenString = currentText.Split(splitIdentifier);      //Split the line into an array, separating the original line by blank spaces
-                        switch (brokenString[0])
-                        {
-                            case "v":
-                                vertices++;
-                                break;
-                            case "vt":
-                                vt++;
-                                break;
-                            case "vn":
-                                vn++;
-                                break;
-                            case "f":
-                                face = face + brokenString.Length - 1;
-                                triangles = triangles + 3 * (brokenString.Length - 2); /*brokenString.Length is 3 or greater since a face must have at least
-                                                                                     3 vertices.  For each additional vertice, there is an additional
-                                                                                     triangle in the mesh (hence this formula).*/
-                                break;
-                        }
-                        currentText = reader.ReadLine();
-                        if (currentText != null)
-                        {
-                            currentText = currentText.Replace("  ", " ");
-                        }
-                    }
+                    mesh.mtlFile = currentText.Substring(7).Trim();
+                }
+                else if (currentText.StartsWith("usemtl "))
+                {
+                    mesh.usedMaterial = currentText.Substring(7).Trim();
+                }
+                else if (currentText.StartsWith("v ")) vertices++;
+                else if (currentText.StartsWith("vt ")) vt++;
+                else if (currentText.StartsWith("vn ")) vn++;
+                else if (currentText.StartsWith("f "))
+                {
+                    string[] brokenString = currentText.Split(' ');
+                    face += brokenString.Length - 1;
+                    triangles += 3 * (brokenString.Length - 2);
                 }
             }
+
+            //ObjImport.Logger.LogMessage("mesh.usedMaterial: " + mesh.usedMaterial);
             mesh.triangles = new int[triangles];
             mesh.vertices = new Vector3[vertices];
             mesh.uv = new Vector2[vt];
@@ -144,12 +122,19 @@ namespace ObjImport
             return mesh;
         }
 
-        private static void populateMeshStruct(ref meshStruct mesh)
+        // I have to subtract this from the number that the obj saves for each vertex of a face
+        // because the obj refers to its entire list and I only have the verts of the current object
+        private static int usedUpVerts = 0;
+        private static int usedUpNorms = 0;
+        private static int usedUpUVs = 0;
+        private static void populateMeshStruct(ref MeshDto mesh)
         {
             StreamReader stream = File.OpenText(mesh.fileName);
-            string entireText = stream.ReadToEnd();
+
+            string objectText = stream.ReadToEnd();
             stream.Close();
-            using (StringReader reader = new StringReader(entireText))
+
+            using (StringReader reader = new StringReader(objectText))
             {
                 string currentText = reader.ReadLine();
 
@@ -164,12 +149,13 @@ namespace ObjImport
                 int vt = 0;
                 int vt1 = 0;
                 int vt2 = 0;
+                bool skippedFirstO = false;
                 while (currentText != null)
                 {
                     if (!currentText.StartsWith("f ") && !currentText.StartsWith("v ") && !currentText.StartsWith("vt ") &&
                         !currentText.StartsWith("vn ") && !currentText.StartsWith("g ") && !currentText.StartsWith("usemtl ") &&
                         !currentText.StartsWith("mtllib ") && !currentText.StartsWith("vt1 ") && !currentText.StartsWith("vt2 ") &&
-                        !currentText.StartsWith("vc ") && !currentText.StartsWith("usemap "))
+                        !currentText.StartsWith("vc ") && !currentText.StartsWith("usemap ") && !currentText.StartsWith("o "))
                     {
                         currentText = reader.ReadLine();
                         if (currentText != null)
@@ -216,23 +202,22 @@ namespace ObjImport
                             case "vc":
                                 break;
                             case "f":
-
                                 int j = 1;
                                 List<int> intArray = new List<int>();
                                 while (j < brokenString.Length && ("" + brokenString[j]).Length > 0)
                                 {
                                     Vector3 temp = new Vector3();
                                     brokenBrokenString = brokenString[j].Split(splitIdentifier2, 3);    //Separate the face into individual components (vert, uv, normal)
-                                    temp.x = System.Convert.ToInt32(brokenBrokenString[0]);
+                                    temp.x = System.Convert.ToInt32(brokenBrokenString[0]) - usedUpVerts; //subtract number of vertieces used by other objects before
                                     if (brokenBrokenString.Length > 1)                                  //Some .obj files skip UV and normal
                                     {
                                         if (brokenBrokenString[1] != "")                                //Some .obj files skip the uv and not the normal
                                         {
-                                            temp.y = System.Convert.ToInt32(brokenBrokenString[1]);
+                                            temp.y = System.Convert.ToInt32(brokenBrokenString[1]) - usedUpUVs; //subtract number of UVs used by other objects before
                                         }
                                         if (brokenBrokenString.Length > 2)                              //Some .obj files miss the normal completly
                                         {
-                                            temp.z = System.Convert.ToInt32(brokenBrokenString[2]);
+                                            temp.z = System.Convert.ToInt32(brokenBrokenString[2]) - usedUpNorms; //subtract number of Normals used by other objects before
                                         }
                                     }
                                     j++;
@@ -252,6 +237,20 @@ namespace ObjImport
                                     f++;
 
                                     j++;
+                                }
+                                break;
+                            case "o":
+                                if (skippedFirstO)
+                                {
+                                    usedUpVerts += v; //add the amount of vertices this object has to the usedUpVerts
+                                    usedUpNorms += vn; //add the amount of normals this object has to the usedUpNorms
+                                    usedUpUVs += vt; //add the amount of UVs this object has to the usedUpUVs
+                                    return;
+                                }
+                                else
+                                {
+                                    mesh.name = brokenString[1];
+                                    skippedFirstO = true;
                                 }
                                 break;
                         }

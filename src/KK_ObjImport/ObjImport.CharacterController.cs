@@ -135,7 +135,7 @@ namespace ObjImport
 
             bool x = true;
 
-            for(int i = 0; i < slots.Count; i++)
+            for (int i = 0; i < slots.Count; i++)
             {
                 if (!ObjImport.remeshObject(ChaControl, ChaControl.fileStatus.coordinateType, slots[i], ChaControl.GetAccessoryComponent(slots[i]), meshes[i]))
                 {
@@ -202,7 +202,7 @@ namespace ObjImport
                 if (!remeshData.Keys.Contains(type))
                 {
                     remeshData[type] = new Dictionary<int, List<Mesh>>();
-                    for(int z = 0; z < coSlots[type].Count; z++)
+                    for (int z = 0; z < coSlots[type].Count; z++)
                     {
                         int slot = coSlots[type][z];
                         remeshData[type][slot] = coMeshes[type][z];
